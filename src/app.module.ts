@@ -10,15 +10,18 @@ import { AuthModule } from './modules/auth/auth.module';
 import { RedisModule } from './infra/redis/redis.module';
 import { redisConfig } from './config/redis.config';
 import { FilesModule } from './modules/files/files.module';
+import { s3Config } from './config/s3.config';
+import { S3Module } from './infra/s3/s3.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // no need to import everywhere
-      load: [databaseConfig, redisConfig],
+      load: [databaseConfig, redisConfig, s3Config],
     }),
     DatabaseModule,
     RedisModule,
+    S3Module,
     UtilsModule,
     UsersModule,
     AuthModule,

@@ -43,4 +43,9 @@ export class FilesController {
   remove(@Param('id') id: string) {
     return this.filesService.remove(id);
   }
+
+  @Get(':id/upload-url')
+  getUploadUrl(@Param('id') id: string) {
+    return this.filesService.getUploadUrl(id);
+  }
 }
