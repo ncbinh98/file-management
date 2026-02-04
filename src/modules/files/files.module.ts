@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FilesService } from './files.service';
 import { FilesController } from './files.controller';
+import { S3WebhookController } from './s3-webhook.controller';
 import { File } from './entities/file.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([File])],
-  controllers: [FilesController],
+  controllers: [FilesController, S3WebhookController],
   providers: [FilesService],
   exports: [FilesService],
 })
