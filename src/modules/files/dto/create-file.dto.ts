@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsEnum } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsEnum,
+} from 'class-validator';
 import { FileStatus } from '../entities/file.entity';
 
 export class CreateFileDto {

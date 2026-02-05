@@ -44,8 +44,14 @@ export class File {
   @Column({ type: 'varchar', nullable: true })
   s3Url: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  uploadId: string;
+
+  @Column({ type: 'int', default: 0 })
+  totalParts: number;
+
   @Column({ type: 'jsonb', nullable: true })
-  chunks: any;
+  chunks: Record<string, string>; // partNumber -> eTag
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
