@@ -1,0 +1,163 @@
+{
+  "info": {
+    "_postman_id": "d8e9f0a1-b2c3-4d4e-af5b-6c7d8e9f0a1b",
+    "name": "Resumable Multipart Upload",
+    "description": "Collection for testing the final Resumable S3 Multipart Upload endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Initiate (or Resume)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"large-file.zip\",\n    \"size\": 10485760,\n    \"mimeType\": \"application/zip\",\n    \"fileHash\": \"unique-file-sha256-hash\",\n    \"totalParts\": 2\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/files/multipart/initiate",
+          "host": ["{{baseUrl}}"],
+          "path": ["files", "multipart", "initiate"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Get Part URL",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/files/:id/multipart/url/:partNumber",
+          "host": ["{{baseUrl}}"],
+          "path": ["files", ":id", "multipart", "url", ":partNumber"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "FILE_ID_FROM_INITIATE"
+            },
+            {
+              "key": "partNumber",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Report Part Complete",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"partNumber\": 1,\n    \"eTag\": \"ETAG_FROM_S3_UPLOAD\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/files/:id/multipart/report-part",
+          "host": ["{{baseUrl}}"],
+          "path": ["files", ":id", "multipart", "report-part"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "FILE_ID"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Complete Upload",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/files/:id/multipart/complete",
+          "host": ["{{baseUrl}}"],
+          "path": ["files", ":id", "multipart", "complete"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "FILE_ID"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. List Parts (S3 Direct)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/files/:id/multipart/list-parts",
+          "host": ["{{baseUrl}}"],
+          "path": ["files", ":id", "multipart", "list-parts"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "FILE_ID"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "PASTE_TOKEN_HERE",
+      "type": "string"
+    }
+  ]
+}

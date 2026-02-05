@@ -1,5 +1,26 @@
 import { registerAs } from '@nestjs/config';
-
+/* 
+for testing setup s3 cors:
+  [
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "PUT",
+            "POST",
+            "GET"
+        ],
+        "AllowedOrigins": [
+            "null"
+        ],
+        "ExposeHeaders": [
+            "ETag"
+        ],
+        "MaxAgeSeconds": 3000
+    }
+]
+*/
 export const s3Config = registerAs('s3', () => ({
   region: process.env.AWS_S3_REGION,
   bucket: process.env.AWS_S3_BUCKET,

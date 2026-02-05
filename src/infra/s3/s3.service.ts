@@ -5,6 +5,10 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand,
+  ListPartsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -17,7 +21,8 @@ export class S3Service {
   constructor(private readonly configService: ConfigService) {
     const region = this.configService.getOrThrow<string>('s3.region');
     const accessKeyId = this.configService.getOrThrow<string>('s3.accessKeyId');
-    const secretAccessKey = this.configService.getOrThrow<string>('s3.secretAccessKey');
+    const secretAccessKey =
+      this.configService.getOrThrow<string>('s3.secretAccessKey');
     this.bucket = this.configService.getOrThrow<string>('s3.bucket');
 
     this.client = new S3Client({
@@ -29,7 +34,11 @@ export class S3Service {
     });
   }
 
-  async uploadFile(key: string, body: Buffer | Uint8Array | Blob | string, contentType: string) {
+  async uploadFile(
+    key: string,
+    body: Buffer | Uint8Array | Blob | string,
+    contentType: string,
+  ) {
     try {
       const command = new PutObjectCommand({
         Bucket: this.bucket,
@@ -64,23 +73,107 @@ export class S3Service {
         Bucket: this.bucket,
         Key: key,
       });
-      return await getSignedUrl(this.client, command, { expiresIn });
+      return {
+        uploadUrl: await getSignedUrl(this.client, command, { expiresIn }),
+      };
     } catch (error) {
       this.logger.error(`Error generating presigned URL: ${error.message}`);
       throw error;
     }
   }
 
-  async getPresignedPostUrl(key: string, contentType: string, expiresIn = 3600) {
+  async getPresignedPostUrl(
+    key: string,
+    contentType: string,
+    expiresIn = 3600,
+  ) {
     try {
       const command = new PutObjectCommand({
         Bucket: this.bucket,
         Key: key,
         ContentType: contentType,
       });
-      return await getSignedUrl(this.client, command, { expiresIn });
+      return {
+        uploadUrl: await getSignedUrl(this.client, command, { expiresIn }),
+      };
     } catch (error) {
-      this.logger.error(`Error generating presigned POST URL: ${error.message}`);
+      this.logger.error(
+        `Error generating presigned POST URL: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async startMultipartUpload(key: string, contentType: string) {
+    try {
+      const command = new CreateMultipartUploadCommand({
+        Bucket: this.bucket,
+        Key: key,
+        ContentType: contentType,
+      });
+      const response = await this.client.send(command);
+      return response.UploadId;
+    } catch (error) {
+      this.logger.error(`Error starting multipart upload: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getPresignedUrlForPart(
+    key: string,
+    uploadId: string,
+    partNumber: number,
+    expiresIn = 3600,
+  ) {
+    try {
+      const command = new UploadPartCommand({
+        Bucket: this.bucket,
+        Key: key,
+        UploadId: uploadId,
+        PartNumber: partNumber,
+      });
+      return {
+        uploadUrl: await getSignedUrl(this.client, command, { expiresIn }),
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error generating presigned URL for part ${partNumber}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async completeMultipartUpload(
+    key: string,
+    uploadId: string,
+    parts: { ETag: string; PartNumber: number }[],
+  ) {
+    try {
+      const command = new CompleteMultipartUploadCommand({
+        Bucket: this.bucket,
+        Key: key,
+        UploadId: uploadId,
+        MultipartUpload: {
+          Parts: parts.sort((a, b) => a.PartNumber - b.PartNumber),
+        },
+      });
+      return await this.client.send(command);
+    } catch (error) {
+      this.logger.error(`Error completing multipart upload: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async listParts(key: string, uploadId: string) {
+    try {
+      const command = new ListPartsCommand({
+        Bucket: this.bucket,
+        Key: key,
+        UploadId: uploadId,
+      });
+      return await this.client.send(command);
+    } catch (error) {
+      this.logger.error(`Error listing multipart parts: ${error.message}`);
       throw error;
     }
   }
